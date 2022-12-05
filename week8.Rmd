@@ -1,0 +1,186 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+dataset <- read.csv("neutron.csv")
+```
+
+```{r}
+dataset
+```
+
+
+```{r}
+neutron <- subset(dataset, subset = treatment == "Neutrons")
+```
+
+```{r}
+photons <- subset(dataset, subset = treatment == "Photons")
+```
+
+```{r}
+### incidence rate for neutrons
+neutron %>% count(death)
+```
+
+```{r}
+
+persontimeneutron <- sum(neutron$stime)
+```
+
+```{r}
+neutronIR <- 71/persontimeneutron
+neutronIR
+```
+
+```{r}
+### incidence rate photons
+photons %>% count(death)
+```
+```{r}
+persontimephoton <- sum(photons$stime)
+```
+
+```{r}
+photonsIR <- 38/persontimephoton
+photonsIR
+```
+```{r}
+install.packages(c("survival", "lubridate", "ggsurvfit", "gtsummary", "tidycmprsk"))
+remotes::install_github("zabore/condsurv")
+remotes::install_github("zabore/ezfun")
+library(survival)
+library(lubridate)
+library(ggsurvfit)
+library(gtsummary)
+library(tidycmprsk)
+library(condsurv)
+```
+```{r}
+install.packages("ggsurvfit")
+```
+
+```{r}
+### question b
+Surv(neutron$stime, neutron$death)
+```
+```{r}
+s1 <- survfit(Surv(stime, death) ~ 1, data = neutron)
+```
+
+```{r}
+str(s1)
+```
+```{r}
+survfit(Surv(stime, death) ~ 1, data = neutron) %>% 
+  ggsurvfit() +
+  labs(
+    x = "Days",
+    y = "Overall survival probability"
+  ) + 
+  add_confidence_interval() +
+  add_risktable()
+```
+```{r}
+s1
+```
+```{r}
+s2 <- survfit(Surv(stime, death) ~ 1, data = photons)
+```
+
+```{r}
+survfit(Surv(stime, death) ~ 1, data = photons) %>% 
+  ggsurvfit() +
+  labs(
+    x = "Days",
+    y = "Overall survival probability"
+  ) + 
+  add_confidence_interval() +
+  add_risktable()
+```
+```{r}
+s2
+```
+```{r}
+survfit(Surv(stime, death) ~ treatment, data = dataset) %>% 
+  ggsurvfit() +
+  labs(
+    x = "Days",
+    y = "Overall survival probability"
+  ) +
+  add_risktable()
+```
+
+
+```{r}
+## log rank test
+survdiff(Surv(stime, death) ~ treatment, data = dataset)
+
+```
+
+```{r}
+## cox proportional hazards model
+coxph(Surv(stime, death) ~ treatment, data = dataset)
+```
+```{r}
+coxph(Surv(stime, death) ~ treatment, data = dataset) %>% 
+  tbl_regression(exp = TRUE) 
+```
+
+```{r}
+fit <- survfit(Surv(stime, death) ~ treatment, data = dataset)
+```
+
+```{r}
+install.packages("survminer")
+
+```
+
+```{r}
+ggsurvplot(fit, 
+           risk.table = TRUE, risk.table.col = "strata",
+           fun = "cumhaz")
+```
+
+```{r}
+coxph(Surv(stime, death) ~ treatment + site, data = dataset)
+
+```
+```{r}
+coxph(Surv(stime, death) ~ treatment + phase, data = dataset)
+
+```
+
+```{r}
+coxph(Surv(stime, death) ~ treatment + site + phase, data = dataset)
+
+```
+```{r}
+coxph(Surv(stime, death) ~ treatment + site + phase, data = dataset) %>% 
+  tbl_regression(exp = TRUE) 
+```
+```{r}
+dataset %>% count(metatime)
+```
+```{r}
+wk8 <- na.omit(dataset$metatime)
+```
+```{r}
+wk8
+```
+
+
+```{r}
+survfit(Surv(stime, death + metatime) ~ treatment, data = wk8)
+```
+```{r}
+survfit(Surv(stime, metatime + death) ~ treatment, data = datasetwk8) %>% 
+  ggsurvfit() +
+  labs(
+    x = "Days",
+    y = "Overall survival probability"
+  ) +
+  add_risktable()
+```
+
