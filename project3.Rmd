@@ -1,0 +1,78 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+metabric <- readRDS("metabric-analytical.rds")
+```
+```{r}
+metabric
+```
+```{r}
+summary(metabric$age_diagnosis)
+```
+
+```{r}
+metabric %>% count(menopause)
+```
+```{r}
+metabric %>% count(vital_status)
+```
+
+```{r}
+metabric2 <- subset(metabric, subset = age_diagnosis > 35)
+```
+
+```{r}
+dim(metabric2)
+```
+```{r}
+dim(metabric)
+```
+```{r}
+anyNA(metabric2$surv_months)
+```
+```{r}
+anyNA(metabric2$surv_status)
+```
+```{r}
+anyNA(metabric2$vital_status)
+```
+```{r}
+anyNA(metabric2$age_diagnosis)
+```
+```{r}
+ht <- subset(metabric2, subset = hormone_therapy == "yes")
+```
+
+```{r}
+dim(ht)
+```
+```{r}
+ht <- subset(ht, subset = vital_status != "died of other causes")
+```
+
+```{r}
+colnames(ht)
+```
+```{r}
+ht %>% count(vital_status)
+```
+```{r}
+ht$vital_binary[ht$vital_status == "died of disease"] <- 1
+
+ht$vital_binary[ht$vital_status == "living"] <- 0
+```
+
+```{r}
+ht$vital_binary
+```
+
+
+```{r}
+### median survival
+survfit(Surv(surv_months, vital_binary) ~ 1, data = ht )
+```
+
+
